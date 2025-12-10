@@ -120,11 +120,7 @@ impl LanguageServer for UssLanguageServer {
 
         // Clear diagnostics
         self.client
-            .publish_diagnostics(
-                params.text_document.uri,
-                vec![],
-                None,
-            )
+            .publish_diagnostics(params.text_document.uri, vec![], None)
             .await;
     }
 
@@ -151,7 +147,11 @@ impl LanguageServer for UssLanguageServer {
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
-        let uri = params.text_document_position_params.text_document.uri.to_string();
+        let uri = params
+            .text_document_position_params
+            .text_document
+            .uri
+            .to_string();
         let position = params.text_document_position_params.position;
 
         if let Some(doc) = self.documents.get(&uri) {
@@ -190,7 +190,11 @@ impl LanguageServer for UssLanguageServer {
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
-        let uri = params.text_document_position_params.text_document.uri.to_string();
+        let uri = params
+            .text_document_position_params
+            .text_document
+            .uri
+            .to_string();
         let position = params.text_document_position_params.position;
 
         if let Some(doc) = self.documents.get(&uri) {
@@ -254,7 +258,7 @@ impl UssLanguageServer {
     async fn publish_diagnostics(&self, uri: &str) {
         if let Some(doc) = self.documents.get(uri) {
             let diagnostics = diagnostics::get_diagnostics(&doc);
-            
+
             if let Ok(url) = uri.parse() {
                 self.client
                     .publish_diagnostics(url, diagnostics, Some(doc.version))

@@ -12,16 +12,19 @@ use tower_lsp::lsp_types::*;
 static PROPERTY_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*([\w-]+)\s*:\s*([^;]+);?\s*$").unwrap());
 
+#[allow(dead_code)]
 static SELECTOR_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[.#\w\[\]:,\s>+~*-]+\s*\{").unwrap());
 
-static HEX_COLOR_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"#([0-9A-Fa-f]+)\b").unwrap());
+static HEX_COLOR_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"#([0-9A-Fa-f]+)\b").unwrap());
 
+#[allow(dead_code)]
 static UNCLOSED_BRACE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{[^}]*$").unwrap());
 
+#[allow(dead_code)]
 static UNCLOSED_PAREN_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"\([^)]*$").unwrap());
 
+#[allow(dead_code)]
 static INVALID_SELECTOR_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[^.#\w\[\]:,\s>+~*-]").unwrap());
 
@@ -35,7 +38,8 @@ pub fn get_diagnostics(doc: &Document) -> Vec<Diagnostic> {
     let mut in_declaration_block = false;
 
     for (line_num, line) in text.lines().enumerate() {
-        let line_diagnostics = check_line(line, line_num, &mut brace_depth, &mut in_declaration_block);
+        let line_diagnostics =
+            check_line(line, line_num, &mut brace_depth, &mut in_declaration_block);
         diagnostics.extend(line_diagnostics);
     }
 
@@ -54,7 +58,10 @@ pub fn get_diagnostics(doc: &Document) -> Vec<Diagnostic> {
             },
             severity: Some(DiagnosticSeverity::ERROR),
             source: Some("uss".to_string()),
-            message: format!("Unclosed brace(s): {} opening brace(s) without closing", brace_depth),
+            message: format!(
+                "Unclosed brace(s): {} opening brace(s) without closing",
+                brace_depth
+            ),
             ..Default::default()
         });
     } else if brace_depth < 0 {
@@ -71,7 +78,10 @@ pub fn get_diagnostics(doc: &Document) -> Vec<Diagnostic> {
             },
             severity: Some(DiagnosticSeverity::ERROR),
             source: Some("uss".to_string()),
-            message: format!("Extra closing brace(s): {} more closing than opening", -brace_depth),
+            message: format!(
+                "Extra closing brace(s): {} more closing than opening",
+                -brace_depth
+            ),
             ..Default::default()
         });
     }
@@ -113,29 +123,33 @@ fn check_line(
     diagnostics.extend(check_unclosed_parens(line, line_num));
 
     // Check for missing semicolons in declarations
-    if *in_declaration_block && !trimmed.is_empty() {
-        if trimmed.contains(':') && !trimmed.ends_with(';') && !trimmed.ends_with('{') && !trimmed.ends_with('}') {
-            // Allow multi-line values, but warn about potential missing semicolons
-            // Only warn if this looks like a complete declaration
-            let colon_count = trimmed.matches(':').count();
-            if colon_count == 1 && !trimmed.contains("url(") && !trimmed.contains("var(") {
-                diagnostics.push(Diagnostic {
-                    range: Range {
-                        start: Position {
-                            line: line_num as u32,
-                            character: line.len().saturating_sub(1) as u32,
-                        },
-                        end: Position {
-                            line: line_num as u32,
-                            character: line.len() as u32,
-                        },
+    if *in_declaration_block
+        && !trimmed.is_empty()
+        && trimmed.contains(':')
+        && !trimmed.ends_with(';')
+        && !trimmed.ends_with('{')
+        && !trimmed.ends_with('}')
+    {
+        // Allow multi-line values, but warn about potential missing semicolons
+        // Only warn if this looks like a complete declaration
+        let colon_count = trimmed.matches(':').count();
+        if colon_count == 1 && !trimmed.contains("url(") && !trimmed.contains("var(") {
+            diagnostics.push(Diagnostic {
+                range: Range {
+                    start: Position {
+                        line: line_num as u32,
+                        character: line.len().saturating_sub(1) as u32,
                     },
-                    severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("uss".to_string()),
-                    message: "Missing semicolon at end of declaration".to_string(),
-                    ..Default::default()
-                });
-            }
+                    end: Position {
+                        line: line_num as u32,
+                        character: line.len() as u32,
+                    },
+                },
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("uss".to_string()),
+                message: "Missing semicolon at end of declaration".to_string(),
+                ..Default::default()
+            });
         }
     }
 
@@ -153,26 +167,27 @@ fn check_property_declaration(line: &str, line_num: usize) -> Vec<Diagnostic> {
         let property_value = caps.get(2).map(|m| m.as_str()).unwrap_or("");
 
         // Check if property is known
-        if !property_name.is_empty() && !property_name.starts_with("--") {
-            if !USS_PROPERTIES.contains_key(property_name) {
-                let start_char = line.find(property_name).unwrap_or(0);
-                diagnostics.push(Diagnostic {
-                    range: Range {
-                        start: Position {
-                            line: line_num as u32,
-                            character: start_char as u32,
-                        },
-                        end: Position {
-                            line: line_num as u32,
-                            character: (start_char + property_name.len()) as u32,
-                        },
+        if !property_name.is_empty()
+            && !property_name.starts_with("--")
+            && !USS_PROPERTIES.contains_key(property_name)
+        {
+            let start_char = line.find(property_name).unwrap_or(0);
+            diagnostics.push(Diagnostic {
+                range: Range {
+                    start: Position {
+                        line: line_num as u32,
+                        character: start_char as u32,
                     },
-                    severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some("uss".to_string()),
-                    message: format!("Unknown USS property: '{}'", property_name),
-                    ..Default::default()
-                });
-            }
+                    end: Position {
+                        line: line_num as u32,
+                        character: (start_char + property_name.len()) as u32,
+                    },
+                },
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("uss".to_string()),
+                message: format!("Unknown USS property: '{}'", property_name),
+                ..Default::default()
+            });
         }
 
         // Check for empty values

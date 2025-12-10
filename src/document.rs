@@ -2,10 +2,10 @@
 //!
 //! Manages document state, text operations, and document-related LSP features.
 
+use once_cell::sync::Lazy;
+use regex::Regex;
 use ropey::Rope;
 use tower_lsp::lsp_types::*;
-use regex::Regex;
-use once_cell::sync::Lazy;
 
 /// Represents an open USS document
 #[derive(Debug)]
@@ -115,6 +115,7 @@ impl Document {
         Some(self.content.line(line).to_string())
     }
 
+    #[allow(dead_code)]
     /// Get the text before the cursor on the current line
     pub fn get_text_before_cursor(&self, position: Position) -> Option<String> {
         let line_text = self.get_line(position.line)?;
@@ -148,7 +149,10 @@ pub fn format_document(doc: &Document, options: &FormattingOptions) -> Vec<TextE
 
     vec![TextEdit {
         range: Range {
-            start: Position { line: 0, character: 0 },
+            start: Position {
+                line: 0,
+                character: 0,
+            },
             end: doc.offset_to_position(doc.content.len_chars()),
         },
         new_text: formatted,
@@ -158,7 +162,9 @@ pub fn format_document(doc: &Document, options: &FormattingOptions) -> Vec<TextE
 /// Format a range of a USS document
 pub fn format_range(doc: &Document, range: Range, options: &FormattingOptions) -> Vec<TextEdit> {
     let start_offset = doc.position_to_offset(range.start).unwrap_or(0);
-    let end_offset = doc.position_to_offset(range.end).unwrap_or(doc.content.len_chars());
+    let end_offset = doc
+        .position_to_offset(range.end)
+        .unwrap_or(doc.content.len_chars());
 
     let text = doc.get_text();
     let slice = &text[start_offset..end_offset];
@@ -264,30 +270,25 @@ fn format_uss(text: &str, options: &FormattingOptions) -> String {
     result
 }
 
+#[allow(dead_code)]
 /// Regex for matching USS variables
-static VAR_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"--[\w-]+").unwrap()
-});
+static VAR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"--[\w-]+").unwrap());
 
+#[allow(dead_code)]
 /// Regex for matching var() usage
-static VAR_USAGE_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"var\s*\(\s*(--[\w-]+)\s*\)").unwrap()
-});
+static VAR_USAGE_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"var\s*\(\s*(--[\w-]+)\s*\)").unwrap());
 
+#[allow(dead_code)]
 /// Regex for matching class selectors
-static CLASS_SELECTOR_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\.[\w-]+").unwrap()
-});
+static CLASS_SELECTOR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\.[\w-]+").unwrap());
 
+#[allow(dead_code)]
 /// Regex for matching ID selectors
-static ID_SELECTOR_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"#[\w-]+").unwrap()
-});
+static ID_SELECTOR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"#[\w-]+").unwrap());
 
 /// Regex for matching hex colors
-static HEX_COLOR_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"#([0-9A-Fa-f]{3,8})\b").unwrap()
-});
+static HEX_COLOR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"#([0-9A-Fa-f]{3,8})\b").unwrap());
 
 /// Regex for matching rgb/rgba colors
 static RGBA_COLOR_REGEX: Lazy<Regex> = Lazy::new(|| {
@@ -364,7 +365,12 @@ pub fn find_references(doc: &Document, position: Position, uri: &str) -> Vec<Loc
 }
 
 /// Rename a variable or selector
-pub fn rename(doc: &Document, position: Position, new_name: &str, uri: &str) -> Option<WorkspaceEdit> {
+pub fn rename(
+    doc: &Document,
+    position: Position,
+    new_name: &str,
+    uri: &str,
+) -> Option<WorkspaceEdit> {
     let word = doc.get_word_at_position(position)?;
     let text = doc.get_text();
 
@@ -421,10 +427,22 @@ pub fn get_colors(doc: &Document) -> Vec<ColorInformation> {
     // Find rgb/rgba colors
     for cap in RGBA_COLOR_REGEX.captures_iter(&text) {
         if let Some(m) = cap.get(0) {
-            let r: f32 = cap.get(1).and_then(|c| c.as_str().parse().ok()).unwrap_or(0.0);
-            let g: f32 = cap.get(2).and_then(|c| c.as_str().parse().ok()).unwrap_or(0.0);
-            let b: f32 = cap.get(3).and_then(|c| c.as_str().parse().ok()).unwrap_or(0.0);
-            let a: f32 = cap.get(4).and_then(|c| c.as_str().parse().ok()).unwrap_or(1.0);
+            let r: f32 = cap
+                .get(1)
+                .and_then(|c| c.as_str().parse().ok())
+                .unwrap_or(0.0);
+            let g: f32 = cap
+                .get(2)
+                .and_then(|c| c.as_str().parse().ok())
+                .unwrap_or(0.0);
+            let b: f32 = cap
+                .get(3)
+                .and_then(|c| c.as_str().parse().ok())
+                .unwrap_or(0.0);
+            let a: f32 = cap
+                .get(4)
+                .and_then(|c| c.as_str().parse().ok())
+                .unwrap_or(1.0);
 
             let start = doc.offset_to_position(m.start());
             let end = doc.offset_to_position(m.end());
@@ -447,7 +465,7 @@ pub fn get_colors(doc: &Document) -> Vec<ColorInformation> {
 /// Parse a hex color string to LSP Color
 fn parse_hex_color(hex: &str) -> Option<Color> {
     let hex = hex.trim_start_matches('#');
-    
+
     match hex.len() {
         3 => {
             // RGB shorthand

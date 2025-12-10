@@ -3,10 +3,7 @@
 //! Provides intelligent code completion for USS properties, values, selectors, and more.
 
 use crate::document::Document;
-use crate::uss_data::{
-    get_element_names, get_property_names, get_pseudo_class_names, USS_COLORS, USS_PROPERTIES,
-    USS_PSEUDO_CLASSES, USS_UNITS, UXML_ELEMENTS,
-};
+use crate::uss_data::{USS_COLORS, USS_PROPERTIES, USS_PSEUDO_CLASSES, USS_UNITS, UXML_ELEMENTS};
 use tower_lsp::lsp_types::*;
 
 /// Context for completion
@@ -65,7 +62,12 @@ fn get_completion_context(doc: &Document, position: Position) -> CompletionConte
         if trimmed.contains('{') || !trimmed.contains(':') || trimmed.ends_with(':') {
             // If the last colon is preceded by a selector-like pattern, it's a pseudo-class
             let before_colon = &text_before[..text_before.len() - 1];
-            if before_colon.chars().last().map(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == ')').unwrap_or(false) {
+            if before_colon
+                .chars()
+                .last()
+                .map(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == ')')
+                .unwrap_or(false)
+            {
                 // Could be either pseudo-class or property value
                 // If there's already a property name on this line, it's a value
                 if before_colon.contains(':') {
@@ -105,7 +107,7 @@ fn get_completion_context(doc: &Document, position: Position) -> CompletionConte
 
     if open_braces > close_braces {
         // We're inside a declaration block
-        
+
         // Check if we're after a property colon (expecting value)
         if text_before.contains(':') {
             let prop_name = text_before.trim().split(':').next().unwrap_or("").trim();
@@ -113,13 +115,15 @@ fn get_completion_context(doc: &Document, position: Position) -> CompletionConte
                 return CompletionContext::PropertyValue(prop_name.to_string());
             }
         }
-        
+
         // Check if we're at the start of a new property
         let trimmed = text_before.trim();
         if trimmed.is_empty()
             || trimmed.ends_with(';')
             || trimmed.ends_with('{')
-            || trimmed.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+            || trimmed
+                .chars()
+                .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
         {
             return CompletionContext::PropertyName;
         }

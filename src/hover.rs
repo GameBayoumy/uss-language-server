@@ -77,20 +77,18 @@ fn get_hover_content(word: &str, line: &str, position: Position) -> Option<Strin
     }
 
     // Check if it's a class selector
-    if word.starts_with('.') {
+    if let Some(class_name) = word.strip_prefix('.') {
         return Some(format!(
             "## Class Selector\n\n`{}`\n\nMatches elements with the class `{}`.",
-            word,
-            &word[1..]
+            word, class_name
         ));
     }
 
     // Check if it's an ID selector
-    if word.starts_with('#') {
+    if let Some(id_name) = word.strip_prefix('#') {
         return Some(format!(
             "## ID Selector\n\n`{}`\n\nMatches the element with name `{}`.",
-            word,
-            &word[1..]
+            word, id_name
         ));
     }
 
@@ -98,40 +96,67 @@ fn get_hover_content(word: &str, line: &str, position: Position) -> Option<Strin
     match word {
         "flex" => Some("## `flex`\n\nSets the element to use flexbox layout.".to_string()),
         "none" => Some("## `none`\n\nRemoves/hides the element or disables a feature.".to_string()),
-        "auto" => Some("## `auto`\n\nAllows the browser/engine to calculate the value automatically.".to_string()),
-        "inherit" => Some("## `inherit`\n\nInherits the value from the parent element.".to_string()),
+        "auto" => Some(
+            "## `auto`\n\nAllows the browser/engine to calculate the value automatically."
+                .to_string(),
+        ),
+        "inherit" => {
+            Some("## `inherit`\n\nInherits the value from the parent element.".to_string())
+        }
         "initial" => Some("## `initial`\n\nResets to the initial/default value.".to_string()),
-        "transparent" => Some("## `transparent`\n\nFully transparent color (`rgba(0, 0, 0, 0)`).".to_string()),
-        
+        "transparent" => {
+            Some("## `transparent`\n\nFully transparent color (`rgba(0, 0, 0, 0)`).".to_string())
+        }
+
         // Flex values
         "row" => Some("## `row`\n\nFlex items are laid out horizontally.".to_string()),
         "column" => Some("## `column`\n\nFlex items are laid out vertically.".to_string()),
-        "row-reverse" => Some("## `row-reverse`\n\nFlex items are laid out horizontally in reverse order.".to_string()),
-        "column-reverse" => Some("## `column-reverse`\n\nFlex items are laid out vertically in reverse order.".to_string()),
+        "row-reverse" => Some(
+            "## `row-reverse`\n\nFlex items are laid out horizontally in reverse order."
+                .to_string(),
+        ),
+        "column-reverse" => Some(
+            "## `column-reverse`\n\nFlex items are laid out vertically in reverse order."
+                .to_string(),
+        ),
         "wrap" => Some("## `wrap`\n\nFlex items wrap to multiple lines.".to_string()),
         "nowrap" => Some("## `nowrap`\n\nFlex items stay on a single line.".to_string()),
-        "flex-start" => Some("## `flex-start`\n\nAligns items to the start of the flex container.".to_string()),
-        "flex-end" => Some("## `flex-end`\n\nAligns items to the end of the flex container.".to_string()),
+        "flex-start" => {
+            Some("## `flex-start`\n\nAligns items to the start of the flex container.".to_string())
+        }
+        "flex-end" => {
+            Some("## `flex-end`\n\nAligns items to the end of the flex container.".to_string())
+        }
         "center" => Some("## `center`\n\nCenters items in the flex container.".to_string()),
         "stretch" => Some("## `stretch`\n\nStretches items to fill the container.".to_string()),
-        "space-between" => Some("## `space-between`\n\nDistributes items evenly with space between them.".to_string()),
-        "space-around" => Some("## `space-around`\n\nDistributes items evenly with space around them.".to_string()),
-        
+        "space-between" => Some(
+            "## `space-between`\n\nDistributes items evenly with space between them.".to_string(),
+        ),
+        "space-around" => Some(
+            "## `space-around`\n\nDistributes items evenly with space around them.".to_string(),
+        ),
+
         // Position values
-        "relative" => Some("## `relative`\n\nPositioned relative to its normal position.".to_string()),
-        "absolute" => Some("## `absolute`\n\nPositioned relative to the nearest positioned ancestor.".to_string()),
-        
+        "relative" => {
+            Some("## `relative`\n\nPositioned relative to its normal position.".to_string())
+        }
+        "absolute" => Some(
+            "## `absolute`\n\nPositioned relative to the nearest positioned ancestor.".to_string(),
+        ),
+
         // Display/visibility
         "visible" => Some("## `visible`\n\nThe element is visible.".to_string()),
-        "hidden" => Some("## `hidden`\n\nThe element is hidden but still takes up space.".to_string()),
+        "hidden" => {
+            Some("## `hidden`\n\nThe element is hidden but still takes up space.".to_string())
+        }
         "scroll" => Some("## `scroll`\n\nAdds scrollbars when content overflows.".to_string()),
-        
+
         // Font styles
         "normal" => Some("## `normal`\n\nNormal/default style.".to_string()),
         "bold" => Some("## `bold`\n\nBold font weight.".to_string()),
         "italic" => Some("## `italic`\n\nItalic font style.".to_string()),
         "bold-and-italic" => Some("## `bold-and-italic`\n\nBoth bold and italic.".to_string()),
-        
+
         // Text alignment (Unity-specific)
         "upper-left" => Some("## `upper-left`\n\nText aligned to top-left.".to_string()),
         "middle-left" => Some("## `middle-left`\n\nText aligned to middle-left.".to_string()),
@@ -142,27 +167,39 @@ fn get_hover_content(word: &str, line: &str, position: Position) -> Option<Strin
         "upper-right" => Some("## `upper-right`\n\nText aligned to top-right.".to_string()),
         "middle-right" => Some("## `middle-right`\n\nText aligned to middle-right.".to_string()),
         "lower-right" => Some("## `lower-right`\n\nText aligned to bottom-right.".to_string()),
-        
+
         // Background scale modes
-        "stretch-to-fill" => Some("## `stretch-to-fill`\n\nStretches the image to fill the element.".to_string()),
-        "scale-and-crop" => Some("## `scale-and-crop`\n\nScales and crops the image to fill the element.".to_string()),
-        "scale-to-fit" => Some("## `scale-to-fit`\n\nScales the image to fit within the element.".to_string()),
-        
+        "stretch-to-fill" => {
+            Some("## `stretch-to-fill`\n\nStretches the image to fill the element.".to_string())
+        }
+        "scale-and-crop" => Some(
+            "## `scale-and-crop`\n\nScales and crops the image to fill the element.".to_string(),
+        ),
+        "scale-to-fit" => {
+            Some("## `scale-to-fit`\n\nScales the image to fit within the element.".to_string())
+        }
+
         // Timing functions
-        "ease" => Some("## `ease`\n\nTransition with slow start, then fast, then slow end.".to_string()),
+        "ease" => {
+            Some("## `ease`\n\nTransition with slow start, then fast, then slow end.".to_string())
+        }
         "linear" => Some("## `linear`\n\nConstant speed transition.".to_string()),
         "ease-in" => Some("## `ease-in`\n\nTransition with slow start.".to_string()),
         "ease-out" => Some("## `ease-out`\n\nTransition with slow end.".to_string()),
-        "ease-in-out" => Some("## `ease-in-out`\n\nTransition with slow start and end.".to_string()),
-        
+        "ease-in-out" => {
+            Some("## `ease-in-out`\n\nTransition with slow start and end.".to_string())
+        }
+
         // White-space
         "pre" => Some("## `pre`\n\nPreserves whitespace and line breaks.".to_string()),
         "pre-wrap" => Some("## `pre-wrap`\n\nPreserves whitespace but wraps text.".to_string()),
-        
+
         // Text overflow
         "clip" => Some("## `clip`\n\nClips overflowing text.".to_string()),
-        "ellipsis" => Some("## `ellipsis`\n\nShows ellipsis (...) for overflowing text.".to_string()),
-        
+        "ellipsis" => {
+            Some("## `ellipsis`\n\nShows ellipsis (...) for overflowing text.".to_string())
+        }
+
         _ => None,
     }
 }
