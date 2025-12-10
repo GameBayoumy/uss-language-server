@@ -1,8 +1,10 @@
 # USS Language Server
 
-A Language Server Protocol (LSP) implementation for USS (Unity Style Sheets) - Unity's CSS-like styling language for UI Toolkit.
+[![Release](https://img.shields.io/github/v/release/GameBayoumy/uss-language-server)](https://github.com/GameBayoumy/uss-language-server/releases)
+[![CI](https://github.com/GameBayoumy/uss-language-server/actions/workflows/ci.yml/badge.svg)](https://github.com/GameBayoumy/uss-language-server/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+A Language Server Protocol (LSP) implementation for USS (Unity Style Sheets) - Unity's CSS-like styling language for UI Toolkit.
 
 - **Auto-completion** for USS properties, values, selectors, and pseudo-classes
 - **Hover documentation** for properties and values
